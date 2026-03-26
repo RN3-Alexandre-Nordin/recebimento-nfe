@@ -1,21 +1,12 @@
+# Dados (apenas pastas específicas)
+RecebimentoNFe/Script/XML_entrada/
+RecebimentoNFe/Script/XML_saida/
+RecebimentoNFe/Script/CSV_entrada/
+RecebimentoNFe/Script/CSV_saida/
+
 # Python
 __pycache__/
 *.pyc
-
-# Dados
-*.csv
-*.xml
-*.txt
-
-# Pastas de processamento
-Script/XML_entrada/
-Script/XML_saida/
-Script/CSV_entrada/
-Script/CSV_saida/
-
-# Sistema
-.DS_Store
-Thumbs.db
 
 # IDE
 .vscode/
