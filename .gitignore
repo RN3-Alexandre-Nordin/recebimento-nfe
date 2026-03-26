@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+
+# Dados
+*.csv
+*.xml
+*.txt
+
+# Pastas de processamento
+Script/XML_entrada/
+Script/XML_saida/
+Script/CSV_entrada/
+Script/CSV_saida/
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
