@@ -22,7 +22,7 @@ from typing import Dict, List, Optional, Iterable
 BASE_DIR = Path(__file__).resolve().parent.parent
 FOLDER_INPUT = BASE_DIR / "XML-Entrada"
 FOLDER_OUTPUT = BASE_DIR / "CSV-Entrada"
-FOLDER_ARCHIVE = BASE_DIR / "XML_Saida"
+FOLDER_ARCHIVE = BASE_DIR / "XML-Saida"
 FOLDER_LOGS = BASE_DIR / "Logs"
 
 # --- Configuração de Log ---
@@ -119,6 +119,31 @@ def _extract_header(root: ET.Element) -> Dict[str, str]:
     return data
 
 
+def _get_tax_node_data(tax_group_node: Optional[ET.Element], prefix: str) -> Dict[str, str]:
+    """
+    Achata os dados de um grupo de imposto (ex: ICMS, IPI) procurando o nó de CST/CSOSN
+    e extraindo todos os seus sub-elementos.
+    """
+    data = {}
+    if tax_group_node is None:
+        return data
+
+    # O grupo de imposto (ex: <ICMS>) geralmente tem um único filho (ex: <ICMS00>, <ICMSSN101>)
+    cst_node = None
+    for child in tax_group_node:
+        cst_node = child
+        break
+
+    if cst_node is not None:
+        # Pega o nome do nó de situação tributária (ex: ICMS00)
+        data[f"{prefix}_group"] = cst_node.tag.replace(f"{{{NFE_NS}}}", "")
+        for child in cst_node:
+            tag_name = child.tag.replace(f"{{{NFE_NS}}}", "")
+            data[f"{prefix}_{tag_name}"] = (child.text or "").strip()
+    
+    return data
+
+
 def _extract_items(root: ET.Element) -> List[Dict[str, str]]:
     inf = _get_inf_nfe(root)
     dets = _findall(inf, "nfe:det")
@@ -128,8 +153,8 @@ def _extract_items(root: ET.Element) -> List[Dict[str, str]]:
         n_item = det.attrib.get("nItem", "").strip()
         prod = _find(det, "nfe:prod")
         imposto = _find(det, "nfe:imposto")
-        vTotTrib = _findtext(imposto, "nfe:vTotTrib", "")
 
+        # Dados básicos do item
         item = {
             "nItem": n_item,
             "cProd": _findtext(prod, "nfe:cProd"),
@@ -140,8 +165,22 @@ def _extract_items(root: ET.Element) -> List[Dict[str, str]]:
             "qCom": _findtext(prod, "nfe:qCom"),
             "vUnCom": _findtext(prod, "nfe:vUnCom"),
             "vProd_item": _findtext(prod, "nfe:vProd"),
-            "vTotTrib_item": vTotTrib,
+            "vTotTrib_item": _findtext(imposto, "nfe:vTotTrib"),
         }
+
+        # Extração detalhada de impostos
+        if imposto is not None:
+            group_mapping = {
+                "icms": "nfe:ICMS",
+                "ipi": "nfe:IPI",
+                "pis": "nfe:PIS",
+                "cofins": "nfe:COFINS"
+            }
+            for prefix, xpath in group_mapping.items():
+                tax_node = _find(imposto, xpath)
+                tax_data = _get_tax_node_data(tax_node, prefix)
+                item.update(tax_data)
+
         items.append(item)
 
     return items
@@ -154,9 +193,17 @@ def write_csv(rows: List[Dict[str, str]], out_path: Path) -> bool:
             logging.warning(f"Nenhum dado extraído para {out_path.name}")
             return False
 
-        fieldnames = list(rows[0].keys())
+        # Coleta todos os nomes de campos únicos de todas as linhas
+        all_fieldnames = []
+        seen = set()
+        for row in rows:
+            for k in row.keys():
+                if k not in seen:
+                    all_fieldnames.append(k)
+                    seen.add(k)
+
         with out_path.open("w", newline="", encoding="utf-8") as f:
-            writer = csv.DictWriter(f, fieldnames=fieldnames, delimiter=";", quoting=csv.QUOTE_MINIMAL)
+            writer = csv.DictWriter(f, fieldnames=all_fieldnames, delimiter=";", quoting=csv.QUOTE_MINIMAL)
             writer.writeheader()
             writer.writerows(rows)
         return True
@@ -213,7 +260,6 @@ def main():
             # Move para a pasta de saída após sucesso
             target_path = FOLDER_ARCHIVE / xml_file.name
             try:
-                # Se já existir um arquivo com o mesmo nome na saída, remove antes de mover (ou poderia renomear)
                 if target_path.exists():
                     target_path.unlink()
                 shutil.move(str(xml_file), str(target_path))
@@ -225,4 +271,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main()
