@@ -1,0 +1,34 @@
+# --- Arquivos de Dados (Ignorar) ---
+# Ignora arquivos XML em qualquer lugar
+*.xml
+# Ignora arquivos CSV em qualquer lugar
+*.csv
+# Ignora arquivos de Log
+*.log
+Logs/*.log
+
+# --- Pastas de Dados (Manter apenas estrutura) ---
+# Através do uso de .gitkeep (regras abaixo permitem o .gitkeep)
+!XML-Entrada/.gitkeep
+!XML_Saida/.gitkeep
+!CSV-Entrada/.gitkeep
+!Logs/.gitkeep
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+build/
+dist/
+
+# --- IDEs ---
+.vscode/
+.idea/
+*.swp
+*.bak
+
+# --- Outros ---
+.DS_Store
+Thumbs.db
