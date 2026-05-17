@@ -73,6 +73,13 @@ def _get_inf_nfe(root: ET.Element) -> Optional[ET.Element]:
     return inf
 
 
+def _safe_float(val: str) -> float:
+    try:
+        return float(val)
+    except (ValueError, TypeError):
+        return 0.0
+
+
 def _format_date_only(date_str: str) -> str:
     """
     Extrai apenas a data no formato YYYY/MM/DD de uma string ISO 8601 completa.
@@ -132,6 +139,11 @@ def _extract_header(root: ET.Element) -> Dict[str, str]:
         "vIBS": _findtext(ibs_tot, "nfe:gIBS/nfe:vIBS"),
         "vCBS": _findtext(ibs_tot, "nfe:gCBS/nfe:vCBS"),
         "vIPI": _findtext(total, "nfe:vIPI"),
+        "vBCPIS": _findtext(total, "nfe:vBCPIS"),
+        "vBCCOFINS": _findtext(total, "nfe:vBCCOFINS"),
+        "vIBSMun": _findtext(ibs_tot, "nfe:vIBSMun"),
+        "vIS": _findtext(total, "nfe:vIS") or _findtext(ibs_tot, "nfe:vIS"),
+        "vBCIPI": _findtext(total, "nfe:vBCIPI"),
     }
     
     infAdic = _find(inf, "nfe:infAdic")
@@ -267,6 +279,19 @@ def process_xml(xml_file: Path) -> Optional[List[List[str]]]:
         header_data["nome_arquivo"] = xml_file.name
         items_data = _extract_items(root)
         
+        # Consolidação de bases de cálculo caso não existam no cabeçalho
+        if not header_data.get("vBCPIS"):
+            val_pis = sum(_safe_float(item.get("pis_vBC")) for item in items_data)
+            header_data["vBCPIS"] = f"{val_pis:.2f}"
+            
+        if not header_data.get("vBCCOFINS"):
+            val_cofins = sum(_safe_float(item.get("cofins_vBC")) for item in items_data)
+            header_data["vBCCOFINS"] = f"{val_cofins:.2f}"
+            
+        if not header_data.get("vBCIPI"):
+            val_ipi = sum(_safe_float(item.get("ipi_vBC")) for item in items_data)
+            header_data["vBCIPI"] = f"{val_ipi:.2f}"
+        
         all_rows = []
 
         # --- Bloco 1: Cabeçalho ---
@@ -305,8 +330,8 @@ def process_xml(xml_file: Path) -> Optional[List[List[str]]]:
             all_rows.append(b2_row)
 
         # --- Bloco 3: Totais ---
-        b3_fields = ["vProd", "vNF", "vICMS", "vBC", "vPIS", "vCOFINS", "vBCIBSCBS", "vIBS", "vCBS", "vIPI"]
-        b3_num = {"vProd", "vNF", "vICMS", "vBC", "vPIS", "vCOFINS", "vBCIBSCBS", "vIBS", "vCBS", "vIPI"}
+        b3_fields = ["vProd", "vNF", "vICMS", "vBC", "vPIS", "vCOFINS", "vBCIBSCBS", "vIBS", "vCBS", "vBCPIS", "vBCCOFINS", "vIBSMun", "vIS", "vBCIPI", "vIPI"]
+        b3_num = {"vProd", "vNF", "vICMS", "vBC", "vPIS", "vCOFINS", "vBCIBSCBS", "vIBS", "vCBS", "vBCPIS", "vBCCOFINS", "vIBSMun", "vIS", "vBCIPI", "vIPI"}
         b3_row = ["3"] + _fill_values(header_data, b3_fields, b3_num)
         all_rows.append(b3_row)
 

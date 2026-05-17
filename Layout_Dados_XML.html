@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Documentação Técnica: Layout de Integração</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
+            line-height: 1.6;
+            margin: 0;
+            padding: 40px;
+            background-color: #f4f7f6;
+        }
+        .container {
+            max-width: 950px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            font-size: 24px;
+        }
+        h2 {
+            color: #2980b9;
+            margin-top: 40px;
+            font-size: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+        .alert {
+            background-color: #e8f4f8;
+            border-left: 5px solid #3498db;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .alert-warning {
+            background-color: #fff3cd;
+            border-left-color: #f39c12;
+            color: #8a6d3b;
+        }
+        .alert strong {
+            color: #2c3e50;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+            border-radius: 5px;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0,0,0,0.02);
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        th {
+            background-color: #2c3e50;
+            color: #ffffff;
+            font-weight: 600;
+        }
+        tr:nth-child(even) {
+            background-color: #f9fbfb;
+        }
+        tr:hover {
+            background-color: #f1f5f6;
+        }
+        td:first-child {
+            font-weight: bold;
+            color: #34495e;
+            text-align: center;
+            width: 80px;
+            background-color: #f4f6f7;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            font-size: 12px;
+            color: #7f8c8d;
+            border-top: 1px solid #ecf0f1;
+            padding-top: 20px;
+        }
+        .tag {
+            background: #ecf0f1;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+            color: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Especificação de Integração JDE - Layout de Dados (CSV)</h1>
+
+    <div class="alert">
+        <strong>Público-alvo:</strong> Analistas de Negócios, Key Users e Equipe de Integração JDE.<br>
+        Este documento especifica o layout comercial e técnico do arquivo de integração, gerado automaticamente para importação de notas fiscais no sistema JD Edwards.
+    </div>
+
+    <h2>1. Visão Geral</h2>
+    <p>Devido à restrição nativa de caracteres na tabela do JDE, o arquivo final organiza os dados adotando um modelo <strong>linear e hierárquico</strong>. Toda Nota Fiscal é desmembrada em blocos de registros sequenciais. O primeiro campo de cada linha sempre indicará o tipo do bloco.</p>
+
+    <div class="alert">
+        <strong>Padrões de Formatação:</strong>
+        <ul style="margin-top: 10px; margin-bottom: 0;">
+            <li><strong>Separador de Colunas:</strong> Ponto e vírgula (<span class="tag">;</span>)</li>
+            <li><strong>Valores Monetários Vazios:</strong> Preenchidos com <span class="tag">0</span></li>
+            <li><strong>Campos de Texto Vazios:</strong> Preenchidos com <span class="tag">@</span></li>
+        </ul>
+    </div>
+
+    <h2>2. Estrutura de Cabeçalho (Bloco 1)</h2>
+    <p>Contém os dados primários do documento fiscal, informações do emitente e do destinatário. <strong>(1 registro por Nota)</strong>.</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Posição</th>
+                <th>Nome do Campo</th>
+                <th>Descrição do Negócio</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>0</td><td>Identificador</td><td>Fixo: <strong>1</strong></td></tr>
+            <tr><td>1</td><td>Chave NF-e</td><td>Chave de Acesso Eletrônica (44 dígitos)</td></tr>
+            <tr><td>2</td><td>Número da NF</td><td>Número do Documento Fiscal</td></tr>
+            <tr><td>3</td><td>Série</td><td>Série do Documento Fiscal</td></tr>
+            <tr><td>4</td><td>Data de Emissão</td><td>Data de emissão da nota (YYYY/MM/DD)</td></tr>
+            <tr><td>5</td><td>Tipo de Operação</td><td>Entrada ou Saída</td></tr>
+            <tr><td>6</td><td>Natureza da Operação</td><td>Descrição da Natureza de Operação (CFOP principal)</td></tr>
+            <tr><td>7</td><td>UF Emitente</td><td>Código IBGE da UF do Emitente</td></tr>
+            <tr><td>8</td><td>Município FG</td><td>Código do Município do Fato Gerador</td></tr>
+            <tr><td>9</td><td>CNPJ Emitente</td><td>CNPJ do Fornecedor / Emitente</td></tr>
+            <tr><td>10</td><td>CPF Emitente</td><td>CPF do Fornecedor / Emitente (quando aplicável)</td></tr>
+            <tr><td>11</td><td>Razão Social Emit.</td><td>Razão Social ou Nome do Emitente</td></tr>
+            <tr><td>12</td><td>IE Emitente</td><td>Inscrição Estadual do Emitente</td></tr>
+            <tr><td>13</td><td>UF Emitente</td><td>Sigla do Estado do Emitente</td></tr>
+            <tr><td>14</td><td>Cidade Emitente</td><td>Nome do Município do Emitente</td></tr>
+            <tr><td>15</td><td>CNPJ Destinatário</td><td>CNPJ da Filial / Destinatário</td></tr>
+            <tr><td>16</td><td>CPF Destinatário</td><td>CPF do Destinatário (quando aplicável)</td></tr>
+            <tr><td>17</td><td>Razão Social Dest.</td><td>Razão Social ou Nome do Destinatário</td></tr>
+            <tr><td>18</td><td>IE Destinatário</td><td>Inscrição Estadual do Destinatário</td></tr>
+            <tr><td>19</td><td>UF Destinatário</td><td>Sigla do Estado do Destinatário</td></tr>
+            <tr><td>20</td><td>Cidade Destinatário</td><td>Nome do Município do Destinatário</td></tr>
+            <tr><td>21</td><td>Nome do Arquivo</td><td>Referência de rastreabilidade (nome original do XML)</td></tr>
+        </tbody>
+    </table>
+
+    <h2>3. Detalhamento de Itens (Bloco 2)</h2>
+    <p>Detalhamento de produtos e desmembramentos tributários linha a linha. <strong>(N registros por Nota)</strong>.</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Posição</th>
+                <th>Nome do Campo</th>
+                <th>Descrição do Negócio</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>0</td><td>Identificador</td><td>Fixo: <strong>2</strong></td></tr>
+            <tr><td>1</td><td>Número do Item</td><td>Sequencial do produto na nota</td></tr>
+            <tr><td>2</td><td>Código do Produto</td><td>SKU ou Código Comercial do Fornecedor</td></tr>
+            <tr><td>3</td><td>Descrição do Produto</td><td>Descrição Comercial da mercadoria</td></tr>
+            <tr><td>4</td><td>NCM</td><td>Código de Nomenclatura Comum do Mercosul</td></tr>
+            <tr><td>5</td><td>CFOP</td><td>Código Fiscal de Operações e Prestações</td></tr>
+            <tr><td>6</td><td>Unid. Medida</td><td>Unidade de Medida Comercial (UN, KG, CX, etc)</td></tr>
+            <tr><td>7</td><td>Quantidade</td><td>Quantidade Faturada</td></tr>
+            <tr><td>8</td><td>Valor Unitário</td><td>Preço unitário de comercialização</td></tr>
+            <tr><td>9</td><td>Valor Total Bruto</td><td>Valor total do item (Quantidade × Valor Unitário)</td></tr>
+            <tr><td>10</td><td>Total de Tributos</td><td>Valor aproximado total de tributos do item</td></tr>
+            <tr><td>11</td><td>Lote</td><td>Número do Lote para controle de qualidade/rastreio</td></tr>
+            <tr><td>12</td><td>Origem (ICMS)</td><td>Origem da Mercadoria (Nacional/Importada)</td></tr>
+            <tr><td>13</td><td>CST ICMS</td><td>Código de Situação Tributária (ICMS)</td></tr>
+            <tr><td>14-18</td><td>Cálculo do ICMS</td><td>Modalidade, Redução, Base de Cálculo, Alíquota e Valor do ICMS</td></tr>
+            <tr><td>19-24</td><td>Cálculo ICMS-ST</td><td>Informações completas de Substituição Tributária (Base, MVA, ICMS-ST)</td></tr>
+            <tr><td>25-27</td><td>Cálculo do FCP</td><td>Fundo de Combate à Pobreza (Base, Percentual e Valor)</td></tr>
+            <tr><td>28-31</td><td>Tributação IPI</td><td>CST, Base de Cálculo, Alíquota e Valor apurado do IPI</td></tr>
+            <tr><td>32-35</td><td>Tributação PIS</td><td>CST, Base de Cálculo, Alíquota e Valor apurado do PIS</td></tr>
+            <tr><td>36-39</td><td>Tributação COFINS</td><td>CST, Base de Cálculo, Alíquota e Valor apurado da COFINS</td></tr>
+            <tr><td>40-49</td><td>Tributação IBS/CBS</td><td>Novos impostos da Reforma: CST, Classes, Bases e Valores (IBS UF, IBS Mun, CBS)</td></tr>
+            <tr><td>50-53</td><td>Imposto Importação</td><td>Despesas aduaneiras e Valor apurado do Imposto de Importação (II)</td></tr>
+        </tbody>
+    </table>
+
+    <h2>4. Totalizadores Gerais (Bloco 3)</h2>
+    <p>Consolidação do somatório financeiro e de bases tributárias da fatura. <strong>(1 registro por Nota)</strong>.</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Posição</th>
+                <th>Nome do Campo</th>
+                <th>Descrição do Negócio</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>0</td><td>Identificador</td><td>Fixo: <strong>3</strong></td></tr>
+            <tr><td>1</td><td>Total dos Produtos</td><td>Valor Bruto Total dos Produtos e Serviços</td></tr>
+            <tr><td>2</td><td>Total da Nota</td><td>Valor Financeiro Líquido Total da Nota Fiscal</td></tr>
+            <tr><td>3</td><td>Total ICMS</td><td>Valor Agregado Total do ICMS</td></tr>
+            <tr><td>4</td><td>Base ICMS</td><td>Somatório da Base de Cálculo do ICMS</td></tr>
+            <tr><td>5</td><td>Total PIS</td><td>Valor Agregado Total do PIS</td></tr>
+            <tr><td>6</td><td>Total COFINS</td><td>Valor Agregado Total da COFINS</td></tr>
+            <tr><td>7</td><td>Base IBS/CBS</td><td>Base de Cálculo Consolidada IBS e CBS</td></tr>
+            <tr><td>8</td><td>Total IBS</td><td>Valor Agregado Total do IBS</td></tr>
+            <tr><td>9</td><td>Total CBS</td><td>Valor Agregado Total do CBS</td></tr>
+            <tr><td>10</td><td>Base PIS</td><td>Base de Cálculo Consolidada do PIS</td></tr>
+            <tr><td>11</td><td>Base COFINS</td><td>Base de Cálculo Consolidada da COFINS</td></tr>
+            <tr><td>12</td><td>Total IBS Municipal</td><td>Valor Consolidado do IBS Municipal</td></tr>
+            <tr><td>13</td><td>Total IS</td><td>Valor do Imposto Seletivo (IS)</td></tr>
+            <tr><td>14</td><td>Base IPI</td><td>Base de Cálculo Consolidada do IPI</td></tr>
+            <tr><td>15</td><td>Total IPI</td><td>Valor Agregado Total do IPI</td></tr>
+        </tbody>
+    </table>
+
+    <h2>5. Observações Fiscais (Bloco 4)</h2>
+    <p>Desmembramento de informações complementares, divididas de acordo com as restrições da tabela. <strong>(N registros por Nota)</strong>.</p>
+
+    <div class="alert alert-warning">
+        <strong>Importante:</strong> Para garantir a compatibilidade com a tabela de destino do sistema JDE, textos extensos são paginados linha a linha, com limite máximo de 80 caracteres.
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Posição</th>
+                <th>Nome do Campo</th>
+                <th>Descrição do Negócio</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>0</td><td>Identificador</td><td>Fixo: <strong>4</strong></td></tr>
+            <tr><td>1</td><td>Página (Sequencial)</td><td>Número sequencial que remonta o texto original (1, 2, 3...)</td></tr>
+            <tr><td>2</td><td>Texto da Observação</td><td>Fragmento do bloco de notas fiscais, máximo 80 caracteres</td></tr>
+        </tbody>
+    </table>
+
+    <div class="footer">
+        Documentação de Integração gerada automaticamente.<br>
+        Projeto DesmontaXML.
+    </div>
+</div>
+
+</body>
+</html>
